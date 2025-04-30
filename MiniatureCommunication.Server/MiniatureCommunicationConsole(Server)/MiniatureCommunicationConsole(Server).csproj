@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>MiniatureCommunicationConsole_Server_</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Copyright>Copyright (C) 2023-2024 Hagnimik, All rights reserved.</Copyright>
+    <Description>微型通信服务端</Description>
+    <Title>微型通信服务端</Title>
+    <Product>MiniatureCommunicationConsole(Server)</Product>
+    <ApplicationIcon>McICO256+128+64+48+32+24+16.ico</ApplicationIcon>
+    <AssemblyVersion>2.12.16.0405</AssemblyVersion>
+	  <FileVersion>2.12.16.20240405_beta</FileVersion>
+    <Version>2.12.16.20240405-beta</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="McICO256+128+64+48+32+24+16.ico" />
+  </ItemGroup>
+
+</Project>
