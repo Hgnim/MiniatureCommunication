@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -25,7 +25,7 @@ namespace MiniatureCommunicationConsole_Server_
 		/// 如果客户端在连接后没有获取旧信息就断开，重连后无法获取之前的旧信息
 		/// 客户端连接时间显示到客户端管理列表里
 		/// </summary>
-		public readonly static string versionStr = "2.12.16.20240405_beta";//版本号信息在此填写,开头不加"V"
+		public readonly static string versionStr = "2.12.17.20240405_beta";//版本号信息在此填写,开头不加"V"
 
 		/// <summary>
 		/// 存储各文件的路径信息
@@ -222,7 +222,8 @@ error:;
 
 		bool[] clientNumBool = new bool[10];//每个编号是否有对应的客户端连接
 
-		string[] clientLocalip = new string[10];//每个客户端的ip信息
+		string[] clientIP = new string[10];//每个客户端的ip信息
+		string[] clientHost = new string[10];//记录每个客户端的主机地址信息
 		string[] clientConnectTime = new string[10];//客户端连接的时间
 		string[] clientConnectLastTime = new string[10];//客户端上一次连接的时间
 		int[] clientOldChatLine = Enumerable.Repeat(-3, 10).ToArray();//客户端获取旧信息最后一次的行数，下一次获取信息就直接从此行开始，初始化为-3表示空值
@@ -304,14 +305,18 @@ error:;
 								clientNumBool[clientNum] = true;
 								
 								tcpClient[clientNum] = tcpListener.AcceptTcpClient();
+
+								clientIP[clientNum] = ((IPEndPoint)tcpClient[clientNum].Client.RemoteEndPoint).Address.ToString(); //获取客户端ip地址
+								clientHost[clientNum] = ((IPEndPoint)tcpClient[clientNum].Client.RemoteEndPoint).ToString(); //获取客户端ip和端口
+								ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端(编号:" + clientNum + ")"+ clientHost[clientNum] +"正在连接!" + "\r\n", true);
+
 								networkStream[clientNum] = tcpClient[clientNum].GetStream();
 								reader[clientNum] = new BinaryReader(networkStream[clientNum]);
 								writer[clientNum] = new BinaryWriter(networkStream[clientNum]);
 
 								clientConnectTime[clientNum] = TimeMDHMS;
 								 
-								ConsoleOutput.CO("[" + clientConnectTime[clientNum] + "][系统信息]" + "客户端已连接\r\n", false);
-								ConsoleOutput.CO("[" + clientConnectTime[clientNum] + "][系统信息]" + "客户端已连接，客户端编号:" + clientNum + "\r\n", true);
+								ConsoleOutput.CO("[" + clientConnectTime[clientNum] + "][系统信息]" + "客户端" + clientHost[clientNum] +"已连接，客户端编号:" + clientNum + "\r\n");
 								//}));
 
 								if (readerListenThread[clientNum] != null && readerListenThread[clientNum].IsAlive == true)
@@ -408,7 +413,8 @@ end:;
 						clientNumBool[clientNum] = false;
 						clientPass[clientNum] = false;
 						clientPassNum[clientNum] = 0;
-						clientLocalip[clientNum] = null;
+						clientIP[clientNum] = null;
+						clientHost[clientNum] = null;
 						clientConnectTime[clientNum] = null;
 						clientConnectLastTime[clientNum] = null;
 						clientOldChatLine[clientNum] = -3;
@@ -487,7 +493,7 @@ end:;
 									case "clientListView":
 										xmlEle.SetAttribute("clientIDHeader_Width", clientIDHeader.Width.ToString());
 										xmlEle.SetAttribute("clientUserNameHeader_Width", clientUserNameHeader.Width.ToString());
-										xmlEle.SetAttribute("clientLocalipHeader_Width", clientLocalipHeader.Width.ToString());
+										xmlEle.SetAttribute("clientIPHeader_Width", clientIPHeader.Width.ToString());
 										xmlEle.SetAttribute("clientNumHeader_Width", clientNumHeader.Width.ToString());
 										xmlEle.SetAttribute("clientConnectTimeHeader_Width", clientConnectTimeHeader.Width.ToString());
 										break;
@@ -563,7 +569,7 @@ end:;
 			}
 			else
 			{
-				clientInfo = clientLocalip[clientNum];
+				clientInfo = clientIP[clientNum];
 			}
 			switch (id)
 			{
@@ -671,7 +677,8 @@ end:;
 			ClientNumStatusVoid();
 			//ClientListViewDataRefresh();
 
-			clientLocalip[clientNum] = null;
+			clientIP[clientNum] = null;
+			clientHost[clientNum] = null;
 			clientConnectTime[clientNum] = null;
 			clientConnectLastTime[clientNum] = null;
 			clientOldChatLine[clientNum] = -3;
@@ -969,10 +976,10 @@ end:;
 									else
 									{
 										 
-										ConsoleOutput.CO("[" + TimeMDHMS + "][客户端" + clientLocalip[clientNum] + "的消息]" + strReaderMessage + "\r\n", false);
-										ConsoleOutput.CO("[" + TimeMDHMS + "][客户端" + "(编号:" + clientNum + ")" + clientLocalip[clientNum] + "的消息]" + strReaderMessage + "\r\n", true);
+										ConsoleOutput.CO("[" + TimeMDHMS + "][客户端" + clientIP[clientNum] + "的消息]" + strReaderMessage + "\r\n", false);
+										ConsoleOutput.CO("[" + TimeMDHMS + "][客户端" + "(编号:" + clientNum + ")" + clientIP[clientNum] + "的消息]" + strReaderMessage + "\r\n", true);
 										//}));
-										WriterVoid(new string[1] { "ClientChat" }, new string[2] { clientLocalip[clientNum], strReaderMessage }, clientNum);
+										WriterVoid(new string[1] { "ClientChat" }, new string[2] { clientIP[clientNum], strReaderMessage }, clientNum);
 									}
 
 									break;
@@ -1002,7 +1009,7 @@ end:;
 													}
 													else
 													{
-														tempClientUserName += clientLocalip[i];
+														tempClientUserName += clientIP[i];
 													}
 												}
 											}
@@ -1021,8 +1028,8 @@ end:;
 											else
 											{
 												 
-												ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + clientLocalip[clientNum] + "请求查看当前客户端数量\r\n", false);
-												ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + "(编号:" + clientNum + ")" + clientLocalip[clientNum] + "请求查看当前客户端数量\r\n" + tempStr + "\r\n", true);
+												ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + clientIP[clientNum] + "请求查看当前客户端数量\r\n", false);
+												ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + "(编号:" + clientNum + ")" + clientIP[clientNum] + "请求查看当前客户端数量\r\n" + tempStr + "\r\n", true);
 												//}));
 											}
 
@@ -1186,8 +1193,8 @@ end:;
 									if (AccountMessage[0] == null && AccountMessage[1] == null && AccountMessage[2] == null)
 									{
 										 
-										ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + clientLocalip[clientNum] + "正在激活账户" + "\r\n", false);
-										ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + "(编号:" + clientNum + ")" + clientLocalip[clientNum] + "正在激活账户" + "\r\n", true);
+										ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + clientIP[clientNum] + "正在激活账户" + "\r\n", false);
+										ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + "(编号:" + clientNum + ")" + clientIP[clientNum] + "正在激活账户" + "\r\n", true);
 										//}));
 									}
 
@@ -1248,31 +1255,31 @@ end:;
 											tempPwStr += "*";
 										}
 										 
-										ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + "(编号:" + clientNum + ")" + clientLocalip[clientNum] + "输入的被激活账户的信息：" +
-										"激活ID:" + AccountMessage[0] +
-										"用户名:" + AccountMessage[1] +
-										"密码:" + tempPwStr
-										+ "\r\n", true);
+										ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]客户端" + "(编号:" + clientNum + ")" + clientIP[clientNum] + "输入的被激活账户的信息: " +
+										"[激活ID: " + AccountMessage[0] +
+										"][用户名: " + AccountMessage[1] +
+										"][密码: " + tempPwStr
+										+ "]\r\n", true);
 										//}));
 										switch (output)
 										{
 											case "succeed":
-												 ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端" + "(编号:" + clientNum + ")" + clientLocalip[clientNum] + "的申请，" + "为" + AccountMessage[0] + "的账户ID激活成功！" + "\r\n",true);
+												 ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端" + "(编号:" + clientNum + ")" + clientIP[clientNum] + "的申请，" + "为" + AccountMessage[0] + "的账户ID激活成功！" + "\r\n",true);
 												//AccountListViewDataRefresh();
 												WriterVoid(new string[2] { "activateAccount", "succeed" }, null, clientNum);
 												break;
 											case "fail":
 												break;
 											case "IDnot":
-												 ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端" + "(编号:" + clientNum + ")" + clientLocalip[clientNum] + "的申请，" + "为" + AccountMessage[0] + "的账户ID激活失败！原因：没有找到此ID" + "\r\n",true);
+												 ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端" + "(编号:" + clientNum + ")" + clientIP[clientNum] + "的申请，" + "为" + AccountMessage[0] + "的账户ID激活失败！原因：没有找到此ID" + "\r\n",true);
 												WriterVoid(new string[2] { "activateAccount", "IDnot" }, null, clientNum);
 												break;
 											case "IDStartTrue":
-												ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端" + "(编号:" + clientNum + ")" + clientLocalip[clientNum] + "的申请，" + "为" + AccountMessage[0] + "的账户ID激活失败！原因：ID已被注册" + "\r\n",true);
+												ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端" + "(编号:" + clientNum + ")" + clientIP[clientNum] + "的申请，" + "为" + AccountMessage[0] + "的账户ID激活失败！原因：ID已被注册" + "\r\n",true);
 												WriterVoid(new string[2] { "activateAccount", "IDStartTrue" }, null, clientNum);
 												break;
 											case "UserNameDuplication":
-												ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端" + "(编号:" + clientNum + ")" + clientLocalip[clientNum] + "的申请，" + "为" + AccountMessage[0] + "的账户ID激活失败！原因：用户名" + AccountMessage[1] + "与现有用户名重复" + "\r\n",true);
+												ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端" + "(编号:" + clientNum + ")" + clientIP[clientNum] + "的申请，" + "为" + AccountMessage[0] + "的账户ID激活失败！原因：用户名" + AccountMessage[1] + "与现有用户名重复" + "\r\n",true);
 												WriterVoid(new string[2] { "activateAccount", "UserNameDuplication" }, null, clientNum);
 												break;
 										}
@@ -1358,11 +1365,10 @@ end:;
 									}
 									break;
 								case "clientIP-activateAccount":
-								case "clientIP":
-									 
-									ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端(编号:" + clientNum + ")IP地址：" + strReaderMessage + "\r\n", true);
-									//}));
-									clientLocalip[clientNum] = strReaderMessage;
+								case "clientIP":								 
+									//ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端(编号:" + clientNum + ")IP地址：" + strReaderMessage + "\r\n", true);
+									//clientIP[clientNum] = strReaderMessage;
+									//暂时禁用这愚蠢的客户端IP获取方式，该方式只能获取客户端的局域网IP
 									clientPassNum[clientNum]++;
 
 									if (strReaderId == "clientIP-activateAccount")
@@ -1519,12 +1525,12 @@ exitFor:;
 								if (clientAccountUserName[clientNum] != null)
 								{
 									ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端(编号:" + clientNum + ")验证成功！(已使用账户登录)" + "\r\n", true);
-									if (clientActivateAccount == false) { ConsoleOutput.CO("[" + clientConnectTime[clientNum] + "][系统信息]" + "客户端已连接，客户端用户名：" + clientAccountUserName[clientNum] + "\r\n"); }
+									if (clientActivateAccount == false) { ConsoleOutput.CO("[" + clientConnectTime[clientNum] + "][系统信息]" + "客户端验证完毕!客户端用户名：" + clientAccountUserName[clientNum] + "\r\n"); }
 								}
 								else
 								{
 									ConsoleOutput.CO("[" + TimeMDHMS + "][系统信息]" + "客户端(编号:" + clientNum + ")验证成功！(未使用账户登录)" + "\r\n", true);
-									if (clientActivateAccount == false) { ConsoleOutput.CO("[" + clientConnectTime[clientNum] + "][系统信息]" + "客户端已连接，客户端IP地址：" + clientLocalip[clientNum] + "\r\n"); }
+									if (clientActivateAccount == false) { ConsoleOutput.CO("[" + clientConnectTime[clientNum] + "][系统信息]" + "客户端验证完毕!客户端IP: " + clientIP[clientNum] + "\r\n"); }
 								}
 								//}));
 								if (clientActivateAccount == false)
@@ -1584,7 +1590,7 @@ exitFor:;
 						outputList.Add("访客");
 						outputList.Add("-");
 					}
-					outputList.Add(clientLocalip[clientNum]);
+					outputList.Add(clientIP[clientNum]);
 					outputList.Add(clientNum.ToString());
 					outputList.Add(clientConnectTime[clientNum]);
 					  //clientListView.Items.Add(lvi); //}));
@@ -2131,7 +2137,7 @@ end:;
 					xmlWriter.WriteStartElement("clientListView");
 					xmlWriter.WriteAttributeString("clientIDHeader_Width", clientIDHeader.Width.ToString());
 					xmlWriter.WriteAttributeString("clientUserNameHeader_Width", clientUserNameHeader.Width.ToString());
-					xmlWriter.WriteAttributeString("clientLocalipHeader_Width", clientLocalipHeader.Width.ToString());
+					xmlWriter.WriteAttributeString("clientIPHeader_Width", clientIPHeader.Width.ToString());
 					xmlWriter.WriteAttributeString("clientNumHeader_Width", clientNumHeader.Width.ToString());
 					xmlWriter.WriteAttributeString("clientConnectTimeHeader_Width", clientConnectTimeHeader.Width.ToString());
 					xmlWriter.WriteEndElement();
@@ -2219,7 +2225,7 @@ end:;
 							case "clientListView":
 								clientIDHeader.Width = int.Parse(xmlE.GetAttribute("clientIDHeader_Width"));
 								clientUserNameHeader.Width = int.Parse(xmlE.GetAttribute("clientUserNameHeader_Width"));
-								clientLocalipHeader.Width = int.Parse(xmlE.GetAttribute("clientLocalipHeader_Width"));
+								clientIPHeader.Width = int.Parse(xmlE.GetAttribute("clientIPHeader_Width"));
 								clientNumHeader.Width = int.Parse(xmlE.GetAttribute("clientNumHeader_Width"));
 								clientConnectTimeHeader.Width = int.Parse(xmlE.GetAttribute("clientConnectTimeHeader_Width"));
 								break;

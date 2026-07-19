@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,9 +11,9 @@
     <Title>微型通信服务端</Title>
     <Product>MiniatureCommunicationConsole(Server)</Product>
     <ApplicationIcon>McICO256+128+64+48+32+24+16.ico</ApplicationIcon>
-    <AssemblyVersion>2.12.16.0405</AssemblyVersion>
-	  <FileVersion>2.12.16.20240405_beta</FileVersion>
-    <Version>2.12.16.20240405-beta</Version>
+    <AssemblyVersion>2.12.17.0405</AssemblyVersion>
+	  <FileVersion>2.12.17.20240405_beta</FileVersion>
+    <Version>2.12.17.20240405-beta</Version>
   </PropertyGroup>
 
   <ItemGroup>
